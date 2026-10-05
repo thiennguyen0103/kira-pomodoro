@@ -1,0 +1,41 @@
+"use client";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import type { ReactNode } from "react";
+
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Avoid an immediate refetch after server data is hydrated.
+        staleTime: 60_000,
+      },
+    },
+  });
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+function getQueryClient() {
+  // Keep server requests isolated and preserve the browser cache across renders.
+  if (typeof window === "undefined") {
+    return makeQueryClient();
+  }
+
+  browserQueryClient ??= makeQueryClient();
+  return browserQueryClient;
+}
+
+type QueryProviderProps = {
+  children: ReactNode;
+};
+
+export function QueryProvider({ children }: QueryProviderProps) {
+  return (
+    <QueryClientProvider client={getQueryClient()}>
+      {children}
+      <ReactQueryDevtools />
+    </QueryClientProvider>
+  );
+}
