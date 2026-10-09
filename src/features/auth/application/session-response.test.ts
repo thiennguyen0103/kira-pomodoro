@@ -6,6 +6,7 @@ const session = {
   user: {
     id: "user-1",
     displayName: "Ada",
+    image: null,
     rankingParticipation: false,
     publicAchievementVisibility: false,
   },

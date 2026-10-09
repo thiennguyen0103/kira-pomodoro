@@ -48,9 +48,7 @@ export const Sizes: Story = {
         <AvatarFallback>M</AvatarFallback>
       </Avatar>
       <Avatar size="lg">
-        <AvatarFallback className="bg-primary text-primary-foreground">
-          AL
-        </AvatarFallback>
+        <AvatarFallback>AL</AvatarFallback>
         <AvatarBadge />
       </Avatar>
     </div>

@@ -6,13 +6,18 @@ const relativeOrigin = "http://return.invalid";
 
 export type SignInNotice = "cancelled" | "failed";
 
+function isSignInPath(value: string): boolean {
+  return value === signInPath || value.startsWith(`${signInPath}?`);
+}
+
 export function signInReturnPath(value: string | null | undefined): string {
   if (
     !value ||
     !value.startsWith("/") ||
-    !isSafeRedirect(value, relativeOrigin)
+    !isSafeRedirect(value, relativeOrigin) ||
+    isSignInPath(value)
   ) {
-    return signInPath;
+    return "/";
   }
 
   return value;

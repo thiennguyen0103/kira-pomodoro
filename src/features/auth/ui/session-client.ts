@@ -1,4 +1,7 @@
+import { signOutFailureMessage } from "../domain/sign-out-timer";
 import type { PublicSession } from "../domain/public-session";
+
+export const sessionQueryKey = ["session"] as const;
 
 export type AccountUser = PublicSession["user"];
 
@@ -44,26 +47,24 @@ export async function requestGoogleSignIn(input: {
   return body.data.url;
 }
 
-export async function saveAccountName(
-  displayName: string,
-): Promise<{ ok: true; user: AccountUser } | { ok: false; message: string }> {
+export async function requestSignOut(): Promise<
+  { ok: true } | { ok: false; message: string }
+> {
   try {
-    const response = await fetch("/api/session", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ displayName }),
-    });
-    const body = (await response.json()) as SessionBody;
+    const response = await fetch("/api/session/sign-out", { method: "POST" });
+    const body = (await response.json()) as SessionBody & {
+      data?: { signedOut?: boolean };
+    };
 
-    if (!response.ok || !body.ok || !body.data?.user) {
+    if (!response.ok || !body.ok || body.data?.signedOut !== true) {
       return {
         ok: false,
-        message: body.error?.message ?? "Could not save your name. Try again.",
+        message: body.error?.message ?? signOutFailureMessage,
       };
     }
 
-    return { ok: true, user: body.data.user };
+    return { ok: true };
   } catch {
-    return { ok: false, message: "Could not save your name. Try again." };
+    return { ok: false, message: signOutFailureMessage };
   }
 }

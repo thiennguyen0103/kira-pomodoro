@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,13 +20,16 @@ import {
   signInReturnPath,
   type SignInNotice,
 } from "../domain/sign-in-flow";
-import { DisplayNameForm } from "./display-name-form";
+import { signOutTimerExplanation } from "../domain/sign-out-timer";
+import { clearPrivateClientState } from "./account-cache";
 import {
   readAccount,
   requestGoogleSignIn,
-  saveAccountName,
+  requestSignOut,
+  sessionQueryKey,
   type AccountUser,
 } from "./session-client";
+import { readUnfinishedTimer } from "./unfinished-timer";
 
 export type AccountPhase =
   | "loading"
@@ -37,24 +41,29 @@ export type AccountScreenViewProps = {
   phase: AccountPhase;
   notice: SignInNotice | null;
   signInPending: boolean;
-  savedName: string | null;
+  accountName: string | null;
   onSignIn: () => void;
   onRetry: () => void;
-  onSaveName: (
-    displayName: string,
-  ) => Promise<{ ok: true } | { ok: false; message: string }>;
+  timerExplanation?: string | null;
+  signOutPending?: boolean;
+  signOutError?: string | null;
+  onSignOut?: () => void;
 };
 
 export function AccountScreenView({
   phase,
   notice,
   signInPending,
-  savedName,
+  accountName,
   onSignIn,
   onRetry,
-  onSaveName,
+  timerExplanation = null,
+  signOutPending = false,
+  signOutError = null,
+  onSignOut = () => undefined,
 }: AccountScreenViewProps) {
   const noticeRef = useRef<HTMLDivElement>(null);
+  const signOutErrorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!notice || phase !== "signed-out") {
@@ -64,9 +73,17 @@ export function AccountScreenView({
     noticeRef.current?.focus();
   }, [notice, phase]);
 
+  useEffect(() => {
+    if (!signOutError || phase !== "signed-in") {
+      return;
+    }
+
+    signOutErrorRef.current?.focus();
+  }, [signOutError, phase]);
+
   const title =
-    phase === "signed-in" && savedName
-      ? savedName
+    phase === "signed-in" && accountName
+      ? accountName
       : phase === "loading"
         ? "Checking your session"
         : phase === "unavailable"
@@ -74,8 +91,17 @@ export function AccountScreenView({
           : "Sign in";
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-8">
-      <Card aria-busy={phase === "loading" || signInPending || undefined}>
+    <main className="relative mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_top,var(--primary-subtle),transparent_70%)]"
+      />
+      <Card
+        className="relative rounded-3xl shadow-card"
+        aria-busy={
+          phase === "loading" || signInPending || signOutPending || undefined
+        }
+      >
         <CardHeader>
           <p className="text-sm font-medium text-primary">Account</p>
           <h1 className="font-heading text-2xl font-medium tracking-tight text-card-foreground">
@@ -83,7 +109,7 @@ export function AccountScreenView({
           </h1>
           <CardDescription>
             {phase === "signed-in"
-              ? "Update the name shown on your account. Your email stays private."
+              ? "This name comes from your Google account. Your email stays private."
               : "Continue with Google. This screen stays signed out until a session is confirmed."}
           </CardDescription>
         </CardHeader>
@@ -132,8 +158,35 @@ export function AccountScreenView({
               {signInPending ? "Connecting to Google…" : "Continue with Google"}
             </Button>
           ) : null}
-          {phase === "signed-in" && savedName ? (
-            <DisplayNameForm savedName={savedName} onSave={onSaveName} />
+          {phase === "signed-in" && accountName ? (
+            <>
+              {timerExplanation ? (
+                <Alert variant="warning">
+                  <AlertTitle>Focus session still open</AlertTitle>
+                  <AlertDescription>{timerExplanation}</AlertDescription>
+                </Alert>
+              ) : null}
+              {signOutError ? (
+                <Alert
+                  ref={signOutErrorRef}
+                  tabIndex={-1}
+                  variant="destructive"
+                >
+                  <AlertTitle>Sign-out failed</AlertTitle>
+                  <AlertDescription>{signOutError}</AlertDescription>
+                </Alert>
+              ) : null}
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                className="w-full"
+                loading={signOutPending}
+                onClick={onSignOut}
+              >
+                {signOutPending ? "Signing out…" : "Sign out"}
+              </Button>
+            </>
           ) : null}
         </CardContent>
       </Card>
@@ -144,15 +197,23 @@ export function AccountScreenView({
 type AccountScreenProps = {
   error: string | null;
   nextPath: string | null;
+  profile?: boolean;
 };
 
-export function AccountScreen({ error, nextPath }: AccountScreenProps) {
+export function AccountScreen({
+  error,
+  nextPath,
+  profile = false,
+}: AccountScreenProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const session = useQuery({
-    queryKey: ["session"],
+    queryKey: sessionQueryKey,
     queryFn: readAccount,
   });
   const [signInPending, setSignInPending] = useState(false);
+  const [signOutPending, setSignOutPending] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const [localNotice, setLocalNotice] = useState<SignInNotice | "clear" | null>(
     null,
   );
@@ -185,27 +246,46 @@ export function AccountScreen({ error, nextPath }: AccountScreenProps) {
         ? "signed-in"
         : "signed-out";
 
+  useEffect(() => {
+    if (phase === "signed-in" && !profile) {
+      router.replace("/");
+    }
+  }, [phase, profile, router]);
+
+  if (phase === "signed-in" && !profile) {
+    return null;
+  }
+
   return (
     <AccountScreenView
       phase={phase}
       notice={phase === "signed-in" ? null : notice}
       signInPending={signInPending}
-      savedName={session.data?.displayName ?? null}
+      accountName={session.data?.displayName ?? null}
       onSignIn={() => {
         void onSignIn();
       }}
+      timerExplanation={signOutTimerExplanation(readUnfinishedTimer())}
+      signOutPending={signOutPending}
+      signOutError={signOutError}
+      onSignOut={() => {
+        void (async () => {
+          setSignOutPending(true);
+          setSignOutError(null);
+          const result = await requestSignOut();
+          setSignOutPending(false);
+
+          if (!result.ok) {
+            setSignOutError(result.message);
+            return;
+          }
+
+          clearPrivateClientState(queryClient);
+          queryClient.setQueryData<AccountUser | null>(sessionQueryKey, null);
+        })();
+      }}
       onRetry={() => {
         void session.refetch();
-      }}
-      onSaveName={async (displayName) => {
-        const result = await saveAccountName(displayName);
-
-        if (!result.ok) {
-          return result;
-        }
-
-        queryClient.setQueryData<AccountUser | null>(["session"], result.user);
-        return { ok: true };
       }}
     />
   );

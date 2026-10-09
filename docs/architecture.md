@@ -31,7 +31,7 @@ Future feature folders:
 
 Server Components are the default. Do not add `"use client"` unless the component needs state, events, or a browser API.
 
-The root layout is a Server Component. `ThemeProvider`, `QueryProvider`, `FormDevtools`, and the Sonner toaster are Client Components because they use browser state. `QueryProvider` creates a new TanStack Query client for each server render and reuses one client in the browser. `FormDevtools` shows TanStack Form state in development. The landing page does not need a Client Component. The sign-in page is a Client Component: it loads the current session, starts Google sign-in, and edits the display name.
+The root layout is a Server Component. `AmbientField` is a Client Component because it draws a Three.js scene in the browser. `ThemeProvider`, `QueryProvider`, `FormDevtools`, and the Sonner toaster are Client Components because they use browser state. `QueryProvider` creates a new TanStack Query client for each server render and reuses one client in the browser. `FormDevtools` shows TanStack Form state in development. The practice page is a Client Component because its timer action moves to the skill screen. The header is a Client Component because it marks the current page. Skills, history, and ranking are Server Components. The sign-in page is a Client Component: it loads the current session and starts Google sign-in. The signed-in name is the Google account name.
 
 Database modules and other server-only modules import `server-only`. Client Components cannot import them. Prisma is used only from server code: Server Components, Server Actions, route handlers, and modules under `src/server` or `src/lib/db.ts`.
 
@@ -43,7 +43,7 @@ Use Server Actions for application mutations such as saving a session. Validate 
 
 Client forms use TanStack Form. Pass a Zod schema to the form's `validators`. That check is for the person filling in the form. The Server Action still validates the same input before it changes data.
 
-Use a route handler when an HTTP endpoint is required, such as `GET /api/health`. Validate inputs with Zod there as well. Future handlers that read or change user data must check authentication and authorization with `authorizeOwner`, using the verified session account id. The health route does neither: it only reports that the process is up and does not touch the database. `PATCH /api/session` updates the signed-in display name and no other account field.
+Use a route handler when an HTTP endpoint is required, such as `GET /api/health`. Validate inputs with Zod there as well. Future handlers that read or change user data must check authentication and authorization with `authorizeOwner`, using the verified session account id. The health route does neither: it only reports that the process is up and does not touch the database. `GET /api/session` returns the public user, including the Google account name.
 
 JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ ok: true, data }`. Failure is `{ ok: false, error: { code, message } }`. A feature defines its own error catalog with `defineApiErrors` and returns it through `jsonResult`. Health stays outside that envelope because it reports process status only.
 
@@ -58,3 +58,5 @@ JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ 
 ## Product boundary
 
 When the timer exists, client code will display it and collect the session. Server code will decide whether that focus time is stored, whether it duplicates an existing record, and how it affects ranking. The client does not calculate the official result.
+
+Sign-out clears private client state in this browser and notifies other tabs with a broadcast. It does not pause, discard, or credit a timer. `readUnfinishedTimer` is the explanation boundary for KPO-7 and KPO-8, and it reports no session until those stories exist. A rejected private request returns the person to sign-in and does not replay the failed change.

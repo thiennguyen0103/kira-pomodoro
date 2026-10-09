@@ -27,7 +27,6 @@ export function nextAccountState(input: {
 }
 
 export const authOperationEffects = {
-  "update-display-name": { mutatesTimer: false, replaysFailedMutation: false },
   "sign-out": { mutatesTimer: false, replaysFailedMutation: false },
   "sign-in": { mutatesTimer: false, replaysFailedMutation: false },
 } as const;
