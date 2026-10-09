@@ -1,20 +1,20 @@
 # Architecture
 
-Kira Pomodoro is one Next.js application. Browser code displays the timer and handles interaction. Server code will validate recorded focus time, prevent duplicate recording, and calculate ranking. Those product features are not built yet.
+Kira Pomodoro is one Next.js application. Browser code displays the timer and handles interaction. Server code validates recorded focus time, prevents duplicate recording, and calculates ranking. Google account sessions are implemented. The timer, skills, and leaderboard are not built yet.
 
 ## Folders
 
-| Path                    | Responsibility                                                 |
-| ----------------------- | -------------------------------------------------------------- |
-| `src/app`               | Routes, layouts, and route handlers. Pages stay thin.          |
-| `src/features`          | Feature UI and feature logic, once a feature exists.           |
-| `src/components/ui`     | Shared shadcn/ui components.                                   |
-| `src/components/layout` | Shared application chrome.                                     |
-| `src/lib`               | Shared helpers, environment validation, and the Prisma client. |
-| `src/server`            | Server-only business services.                                 |
-| `src/styles`            | Global Tailwind and theme tokens.                              |
-| `prisma`                | Prisma schema and, later, migrations.                          |
-| `public`                | Static files.                                                  |
+| Path                    | Responsibility                                                   |
+| ----------------------- | ---------------------------------------------------------------- |
+| `src/app`               | Routes, layouts, and route handlers. Pages stay thin.            |
+| `src/features`          | Feature UI and feature logic. Auth lives in `src/features/auth`. |
+| `src/components/ui`     | Shared shadcn/ui components.                                     |
+| `src/components/layout` | Shared application chrome.                                       |
+| `src/lib`               | Shared helpers, environment validation, and the Prisma client.   |
+| `src/server`            | Server-only business services.                                   |
+| `src/styles`            | Global Tailwind and theme tokens.                                |
+| `prisma`                | Prisma schema and, later, migrations.                            |
+| `public`                | Static files.                                                    |
 
 Create a feature folder only when it contains implementation. Do not add empty business modules.
 
@@ -45,9 +45,11 @@ Client forms use TanStack Form. Pass a Zod schema to the form's `validators`. Th
 
 Use a route handler when an HTTP endpoint is required, such as `GET /api/health`. Validate inputs with Zod there as well. Future handlers that read or change user data must check authentication and authorization. The health route does neither: it only reports that the process is up and does not touch the database.
 
+JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ ok: true, data }`. Failure is `{ ok: false, error: { code, message } }`. A feature defines its own error catalog with `defineApiErrors` and returns it through `jsonResult`. Health stays outside that envelope because it reports process status only.
+
 ## Database access
 
-`prisma/schema.prisma` is the source of truth for PostgreSQL models. The connection string lives in `prisma.config.ts`, which is the Prisma 7 setup. The schema currently has no models and no migrations.
+`prisma/schema.prisma` is the source of truth for PostgreSQL models. Authentication uses Better Auth's `user`, `session`, `account`, and `verification` tables, plus account privacy flags. The connection string lives in `prisma.config.ts`, which is the Prisma 7 setup.
 
 `src/lib/db.ts` creates one Prisma Client with the PostgreSQL driver adapter. In development it stores that client on `globalThis` so hot reload does not open extra pools. Import `db` from server code only.
 
