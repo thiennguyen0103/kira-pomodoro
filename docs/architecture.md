@@ -31,7 +31,7 @@ Future feature folders:
 
 Server Components are the default. Do not add `"use client"` unless the component needs state, events, or a browser API.
 
-The root layout is a Server Component. `ThemeProvider`, `QueryProvider`, `FormDevtools`, and the Sonner toaster are Client Components because they use browser state. `QueryProvider` creates a new TanStack Query client for each server render and reuses one client in the browser. `FormDevtools` shows TanStack Form state in development. The landing page does not need a Client Component.
+The root layout is a Server Component. `ThemeProvider`, `QueryProvider`, `FormDevtools`, and the Sonner toaster are Client Components because they use browser state. `QueryProvider` creates a new TanStack Query client for each server render and reuses one client in the browser. `FormDevtools` shows TanStack Form state in development. The landing page does not need a Client Component. The sign-in page is a Client Component: it loads the current session, starts Google sign-in, and edits the display name.
 
 Database modules and other server-only modules import `server-only`. Client Components cannot import them. Prisma is used only from server code: Server Components, Server Actions, route handlers, and modules under `src/server` or `src/lib/db.ts`.
 

@@ -5,6 +5,8 @@ import {
   type ApiResult,
 } from "@/lib/http/api-response";
 
+import { displayNameUpdateMessage } from "../domain/display-name";
+
 export type { ApiResult };
 
 const authErrors = defineApiErrors({
@@ -18,7 +20,7 @@ const authErrors = defineApiErrors({
   },
   invalid_display_name: {
     status: 400,
-    message: "Display name must be 1–80 characters.",
+    message: displayNameUpdateMessage,
   },
   forbidden: {
     status: 403,

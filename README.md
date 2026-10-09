@@ -2,7 +2,7 @@
 
 Kira Pomodoro is a focus timer for deliberate practice. The browser runs the timer and handles interaction. The server will validate recorded focus time, reject duplicate recordings, and calculate ranking.
 
-This repository is a single Next.js application. Google sign-in and database sessions are implemented on the server. The sign-in screen, skills, the timer, and the leaderboard are not implemented yet.
+This repository is a single Next.js application. Google sign-in, database sessions, and the account screen are implemented. Skills, the timer, and the leaderboard are not implemented yet.
 
 ## Stack
 
@@ -77,7 +77,7 @@ These credentials are for local Docker only.
 
 ## Authentication
 
-Google is the only sign-in method. Better Auth stores the account and the current session in PostgreSQL. A protected request checks that session in the database. There is no background job and no periodic authentication poll.
+Google is the only sign-in method. The account screen is `/sign-in`. It starts Google sign-in and edits the signed-in display name. Better Auth stores the account and the current session in PostgreSQL. A protected request checks that session in the database. There is no background job and no periodic authentication poll.
 
 Session lifetime is 7 days (`expiresIn`). A request that arrives after the session has been used for 1 day (`updateAge`) extends that same session by another 7 days. Cookie caching is off, so sign-out and expiry are visible to the next protected request. Sign-out deletes the current session only. Other devices stay signed in.
 
