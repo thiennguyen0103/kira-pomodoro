@@ -1,4 +1,13 @@
-import { Card, CardDescription, CardHeader } from "@/components/ui/card";
+import Link from "next/link";
+
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
+import { cn } from "cn";
 
 export default function HomePage() {
   return (
@@ -14,6 +23,14 @@ export default function HomePage() {
             screen, and the server checks recorded focus time before it counts.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Link
+            href="/sign-in"
+            className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
+          >
+            Sign in
+          </Link>
+        </CardContent>
       </Card>
     </main>
   );

@@ -1,5 +1,6 @@
 export const displayNameFallback = "Learner";
 export const displayNameMaxLength = 80;
+export const displayNameUpdateMessage = "Display name must be 1–80 characters.";
 
 function isEmailLike(value: string, email: string | null | undefined): boolean {
   if (value.includes("@")) {
