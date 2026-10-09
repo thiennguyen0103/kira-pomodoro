@@ -104,16 +104,21 @@ Register these callback URLs in Google Cloud as authorized redirect URIs:
 
 ### HTTP contract
 
-JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ "ok": true, "data": ... }`. Failure is `{ "ok": false, "error": { "code", "message" } }`. A later backend route defines its own codes with `defineApiErrors` and returns them through `jsonResult`. Auth codes are `unauthenticated`, `invalid_request`, `redirect_rejected`, and `auth_unavailable`. Messages are fixed and do not include tokens, cookies, or secrets.
+JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ "ok": true, "data": ... }`. Failure is `{ "ok": false, "error": { "code", "message" } }`. A later backend route defines its own codes with `defineApiErrors` and returns them through `jsonResult`. Auth codes are `unauthenticated`, `invalid_request`, `invalid_display_name`, `redirect_rejected`, `forbidden`, and `auth_unavailable`. Messages are fixed and do not include tokens, cookies, or secrets.
 
-| Request                                                   | Result                                                                                                                                                |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/session/sign-in` with `{ "callbackURL": "/" }` | `200` `{ "ok": true, "data": { "url" } }`. The browser opens `url` to continue at Google.                                                             |
-| `GET /api/auth/callback/google`                           | Creates or restores one account and sets the session cookie, then redirects inside the app. Cancellation and provider errors do not create a session. |
-| `GET /api/session`                                        | `200` with the public user, or `401` `unauthenticated`.                                                                                               |
-| `POST /api/session/sign-out`                              | `200` `{ "ok": true, "data": { "signedOut": true } }` after the current session is revoked. A failed revocation stays `ok: false`.                    |
+| Request                                                   | Result                                                                                                                                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/session/sign-in` with `{ "callbackURL": "/" }` | `200` `{ "ok": true, "data": { "url" } }`. The browser opens `url` to continue at Google.                                                                                                                                                   |
+| `GET /api/auth/callback/google`                           | Creates or restores one account and sets the session cookie, then redirects inside the app. Cancellation and provider errors do not create a session.                                                                                       |
+| `GET /api/session`                                        | `200` with the public user, or `401` `unauthenticated`.                                                                                                                                                                                     |
+| `PATCH /api/session` with `{ "displayName": "Ada" }`      | `200` with the same public user and the trimmed name. Empty, whitespace-only, and names longer than 80 characters stay unsaved as `400` `invalid_display_name`. A body that includes `userId` or privacy fields is `400` `invalid_request`. |
+| `POST /api/session/sign-out`                              | `200` `{ "ok": true, "data": { "signedOut": true } }` after the current session is revoked. A failed revocation stays `ok: false`.                                                                                                          |
 
 The public user is `{ "id", "displayName", "rankingParticipation", "publicAchievementVisibility" }`. It omits email, OAuth tokens, and the session token. A missing, expired, or revoked session is `unauthenticated`.
+
+Private reads and mutations take the account id from that verified session. `authorizeOwner` denies a missing session and a resource owned by another account. A display-name update writes only `name` for the signed-in account.
+
+After re-login, private work loads that account's fresh server state before timer reconciliation. The order is `load-fresh-account`, then `reconcile-owner-timer`. Sign-in, display-name update, and sign-out do not change timer state and do not replay a failed mutation. Switching accounts clears the previous account's client state. Timer accounting itself stays in the timer stories.
 
 `POST /api/auth/*` remains the OAuth callback transport. Its success responses stay in Better Auth's format, including redirects. Its error responses use the same `{ "ok": false, "error" }` body.
 

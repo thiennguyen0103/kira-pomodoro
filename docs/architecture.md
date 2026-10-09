@@ -43,7 +43,7 @@ Use Server Actions for application mutations such as saving a session. Validate 
 
 Client forms use TanStack Form. Pass a Zod schema to the form's `validators`. That check is for the person filling in the form. The Server Action still validates the same input before it changes data.
 
-Use a route handler when an HTTP endpoint is required, such as `GET /api/health`. Validate inputs with Zod there as well. Future handlers that read or change user data must check authentication and authorization. The health route does neither: it only reports that the process is up and does not touch the database.
+Use a route handler when an HTTP endpoint is required, such as `GET /api/health`. Validate inputs with Zod there as well. Future handlers that read or change user data must check authentication and authorization with `authorizeOwner`, using the verified session account id. The health route does neither: it only reports that the process is up and does not touch the database. `PATCH /api/session` updates the signed-in display name and no other account field.
 
 JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ ok: true, data }`. Failure is `{ ok: false, error: { code, message } }`. A feature defines its own error catalog with `defineApiErrors` and returns it through `jsonResult`. Health stays outside that envelope because it reports process status only.
 
