@@ -4,6 +4,7 @@ type SignInPageProps = {
   searchParams: Promise<{
     error?: string | string[];
     next?: string | string[];
+    profile?: string | string[];
   }>;
 };
 
@@ -18,6 +19,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     <AccountScreen
       error={firstParam(params.error)}
       nextPath={firstParam(params.next)}
+      profile={firstParam(params.profile) === "1"}
     />
   );
 }

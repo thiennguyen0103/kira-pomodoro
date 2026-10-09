@@ -8,11 +8,12 @@ import {
 } from "./sign-in-flow";
 
 describe("sign-in flow", () => {
-  it("returns to the account screen when no safe destination is given", () => {
-    expect(signInReturnPath(null)).toBe("/sign-in");
-    expect(signInReturnPath("")).toBe("/sign-in");
-    expect(signInReturnPath("https://evil.example/phish")).toBe("/sign-in");
-    expect(signInReturnPath("//evil.example")).toBe("/sign-in");
+  it("returns to the main page when no safe destination is given", () => {
+    expect(signInReturnPath(null)).toBe("/");
+    expect(signInReturnPath("")).toBe("/");
+    expect(signInReturnPath("/sign-in")).toBe("/");
+    expect(signInReturnPath("https://evil.example/phish")).toBe("/");
+    expect(signInReturnPath("//evil.example")).toBe("/");
   });
 
   it("keeps a safe internal return path", () => {

@@ -2,13 +2,14 @@
 
 Kira Pomodoro is a focus timer for deliberate practice. The browser runs the timer and handles interaction. The server will validate recorded focus time, reject duplicate recordings, and calculate ranking.
 
-This repository is a single Next.js application. Google sign-in, database sessions, and the account screen are implemented. Skills, the timer, and the leaderboard are not implemented yet.
+This repository is a single Next.js application. Google sign-in, database sessions, and the account screen are implemented. The site shell links Practice, Skills, History, and Ranking. The header shows Sign in until a session exists, then the Google account name and avatar. Saving skills, running the timer, and publishing ranking are not implemented yet.
 
 ## Stack
 
 - Next.js App Router and TypeScript (strict)
 - pnpm 12.6.0
 - Tailwind CSS and shadcn/ui
+- Three.js, for the ambient background
 - PostgreSQL and Prisma ORM 7
 - Zod
 - Oxlint and Oxfmt
@@ -77,7 +78,7 @@ These credentials are for local Docker only.
 
 ## Authentication
 
-Google is the only sign-in method. The account screen is `/sign-in`. It starts Google sign-in and edits the signed-in display name. Better Auth stores the account and the current session in PostgreSQL. A protected request checks that session in the database. There is no background job and no periodic authentication poll.
+Google is the only sign-in method. The account screen is `/sign-in`. It starts Google sign-in. A confirmed session returns to the main page. Profile in the header opens the account screen, and sign-out stays there until it succeeds. Better Auth stores the account and the current session in PostgreSQL. A protected request checks that session in the database. There is no background job and no periodic authentication poll.
 
 Session lifetime is 7 days (`expiresIn`). A request that arrives after the session has been used for 1 day (`updateAge`) extends that same session by another 7 days. Cookie caching is off, so sign-out and expiry are visible to the next protected request. Sign-out deletes the current session only. Other devices stay signed in.
 
@@ -104,21 +105,20 @@ Register these callback URLs in Google Cloud as authorized redirect URIs:
 
 ### HTTP contract
 
-JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ "ok": true, "data": ... }`. Failure is `{ "ok": false, "error": { "code", "message" } }`. A later backend route defines its own codes with `defineApiErrors` and returns them through `jsonResult`. Auth codes are `unauthenticated`, `invalid_request`, `invalid_display_name`, `redirect_rejected`, `forbidden`, and `auth_unavailable`. Messages are fixed and do not include tokens, cookies, or secrets.
+JSON APIs share one envelope from `src/lib/http/api-response.ts`. Success is `{ "ok": true, "data": ... }`. Failure is `{ "ok": false, "error": { "code", "message" } }`. A later backend route defines its own codes with `defineApiErrors` and returns them through `jsonResult`. Auth codes are `unauthenticated`, `invalid_request`, `redirect_rejected`, `forbidden`, and `auth_unavailable`. Messages are fixed and do not include tokens, cookies, or secrets.
 
-| Request                                                   | Result                                                                                                                                                                                                                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/session/sign-in` with `{ "callbackURL": "/" }` | `200` `{ "ok": true, "data": { "url" } }`. The browser opens `url` to continue at Google.                                                                                                                                                   |
-| `GET /api/auth/callback/google`                           | Creates or restores one account and sets the session cookie, then redirects inside the app. Cancellation and provider errors do not create a session.                                                                                       |
-| `GET /api/session`                                        | `200` with the public user, or `401` `unauthenticated`.                                                                                                                                                                                     |
-| `PATCH /api/session` with `{ "displayName": "Ada" }`      | `200` with the same public user and the trimmed name. Empty, whitespace-only, and names longer than 80 characters stay unsaved as `400` `invalid_display_name`. A body that includes `userId` or privacy fields is `400` `invalid_request`. |
-| `POST /api/session/sign-out`                              | `200` `{ "ok": true, "data": { "signedOut": true } }` after the current session is revoked. A failed revocation stays `ok: false`.                                                                                                          |
+| Request                                                   | Result                                                                                                                                                |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/session/sign-in` with `{ "callbackURL": "/" }` | `200` `{ "ok": true, "data": { "url" } }`. The browser opens `url` to continue at Google.                                                             |
+| `GET /api/auth/callback/google`                           | Creates or restores one account and sets the session cookie, then redirects inside the app. Cancellation and provider errors do not create a session. |
+| `GET /api/session`                                        | `200` with the public user, or `401` `unauthenticated`.                                                                                               |
+| `POST /api/session/sign-out`                              | `200` `{ "ok": true, "data": { "signedOut": true } }` after the current session is revoked. A failed revocation stays `ok: false`.                    |
 
-The public user is `{ "id", "displayName", "rankingParticipation", "publicAchievementVisibility" }`. It omits email, OAuth tokens, and the session token. A missing, expired, or revoked session is `unauthenticated`.
+The public user is `{ "id", "displayName", "image", "rankingParticipation", "publicAchievementVisibility" }`. It omits email, OAuth tokens, and the session token. A missing, expired, or revoked session is `unauthenticated`.
 
-Private reads and mutations take the account id from that verified session. `authorizeOwner` denies a missing session and a resource owned by another account. A display-name update writes only `name` for the signed-in account.
+Private reads and mutations take the account id from that verified session. `authorizeOwner` denies a missing session and a resource owned by another account.
 
-After re-login, private work loads that account's fresh server state before timer reconciliation. The order is `load-fresh-account`, then `reconcile-owner-timer`. Sign-in, display-name update, and sign-out do not change timer state and do not replay a failed mutation. Switching accounts clears the previous account's client state. Timer accounting itself stays in the timer stories.
+After re-login, private work loads that account's fresh server state before timer reconciliation. The order is `load-fresh-account`, then `reconcile-owner-timer`. Sign-in and sign-out do not change timer state and do not replay a failed mutation. Switching accounts clears the previous account's client state. Timer accounting itself stays in the timer stories.
 
 `POST /api/auth/*` remains the OAuth callback transport. Its success responses stay in Better Auth's format, including redirects. Its error responses use the same `{ "ok": false, "error" }` body.
 

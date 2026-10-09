@@ -1,37 +1,14 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card";
-import { cn } from "cn";
+import { PageFrame } from "@/components/layout/page-frame";
+import { PracticeScreen } from "@/components/layout/practice-screen";
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-16">
-      <Card>
-        <CardHeader>
-          <p className="text-sm font-medium text-primary">Focus practice</p>
-          <h1 className="font-heading text-3xl font-medium tracking-tight text-card-foreground sm:text-4xl">
-            Kira Pomodoro
-          </h1>
-          <CardDescription className="max-w-prose text-base leading-7">
-            A calm timer for deliberate practice. You keep the session on
-            screen, and the server checks recorded focus time before it counts.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            href="/sign-in"
-            className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
-          >
-            Sign in
-          </Link>
-        </CardContent>
-      </Card>
-    </main>
+    <PageFrame
+      eyebrow="Practice"
+      title="Start a focus session"
+      description="The timer stays on this screen. Recorded focus time counts only after the server checks it."
+    >
+      <PracticeScreen />
+    </PageFrame>
   );
 }

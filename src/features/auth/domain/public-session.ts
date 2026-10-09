@@ -2,6 +2,7 @@ export type PublicSession = {
   user: {
     id: string;
     displayName: string;
+    image: string | null;
     rankingParticipation: boolean;
     publicAchievementVisibility: boolean;
   };
@@ -10,6 +11,7 @@ export type PublicSession = {
 export function toPublicSession(input: {
   id: string;
   name: string;
+  image?: string | null;
   rankingParticipation: boolean;
   publicAchievementVisibility: boolean;
 }): PublicSession {
@@ -17,6 +19,7 @@ export function toPublicSession(input: {
     user: {
       id: input.id,
       displayName: input.name,
+      image: input.image ?? null,
       rankingParticipation: input.rankingParticipation,
       publicAchievementVisibility: input.publicAchievementVisibility,
     },

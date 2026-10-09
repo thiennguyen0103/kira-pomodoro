@@ -1,13 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import {
-  AccountScreenView,
-  type AccountScreenViewProps,
-} from "./account-screen";
-
-const saveName: AccountScreenViewProps["onSaveName"] = async () => ({
-  ok: true,
-});
+import { signOutTimerExplanation } from "../domain/sign-out-timer";
+import { AccountScreenView } from "./account-screen";
 
 const meta = {
   title: "Auth/Account",
@@ -16,10 +10,9 @@ const meta = {
     phase: "signed-out",
     notice: null,
     signInPending: false,
-    savedName: null,
+    accountName: null,
     onSignIn: () => undefined,
     onRetry: () => undefined,
-    onSaveName: saveName,
   },
 } satisfies Meta<typeof AccountScreenView>;
 
@@ -48,18 +41,30 @@ export const Unavailable: Story = {
 export const SignedIn: Story = {
   args: {
     phase: "signed-in",
-    savedName: "Ada",
-    onSaveName: async () => ({ ok: true }),
+    accountName: "Ada Lovelace",
   },
 };
 
-export const SaveFailed: Story = {
+export const SignOutFailed: Story = {
   args: {
     phase: "signed-in",
-    savedName: "Ada",
-    onSaveName: async () => ({
-      ok: false,
-      message: "Could not save your name. Try again.",
-    }),
+    accountName: "Ada Lovelace",
+    signOutError: "Sign-out didn't finish. You are still signed in.",
+  },
+};
+
+export const RunningTimer: Story = {
+  args: {
+    phase: "signed-in",
+    accountName: "Ada Lovelace",
+    timerExplanation: signOutTimerExplanation("running"),
+  },
+};
+
+export const PausedTimer: Story = {
+  args: {
+    phase: "signed-in",
+    accountName: "Ada Lovelace",
+    timerExplanation: signOutTimerExplanation("paused"),
   },
 };

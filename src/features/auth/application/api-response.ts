@@ -5,8 +5,6 @@ import {
   type ApiResult,
 } from "@/lib/http/api-response";
 
-import { displayNameUpdateMessage } from "../domain/display-name";
-
 export type { ApiResult };
 
 const authErrors = defineApiErrors({
@@ -17,10 +15,6 @@ const authErrors = defineApiErrors({
   invalid_request: {
     status: 400,
     message: "The request is invalid.",
-  },
-  invalid_display_name: {
-    status: 400,
-    message: displayNameUpdateMessage,
   },
   forbidden: {
     status: 403,

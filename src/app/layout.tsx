@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
 
+import { AmbientField } from "@/components/layout/ambient-field";
 import { FormDevtools } from "@/components/layout/form-devtools";
 import { QueryProvider } from "@/components/layout/query-provider";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -38,16 +39,19 @@ export default function RootLayout({ children }: PropsWithChildren) {
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        <ThemeProvider>
-          <QueryProvider>
-            <TooltipProvider>
-              <SiteHeader />
-              {children}
-              <Toaster />
-            </TooltipProvider>
-            <FormDevtools />
-          </QueryProvider>
-        </ThemeProvider>
+        <AmbientField />
+        <div className="relative z-10 flex min-h-full flex-1 flex-col">
+          <ThemeProvider>
+            <QueryProvider>
+              <TooltipProvider>
+                <SiteHeader />
+                {children}
+                <Toaster />
+              </TooltipProvider>
+              <FormDevtools />
+            </QueryProvider>
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   );

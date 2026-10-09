@@ -50,10 +50,6 @@ describe("nextAccountState", () => {
 
 describe("authOperationEffects", () => {
   it("does not mutate timer state or replay a failed mutation", () => {
-    expect(authOperationEffects["update-display-name"]).toEqual({
-      mutatesTimer: false,
-      replaysFailedMutation: false,
-    });
     expect(authOperationEffects["sign-out"]).toEqual({
       mutatesTimer: false,
       replaysFailedMutation: false,

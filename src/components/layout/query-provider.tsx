@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { ReactNode } from "react";
 
+import { AccountSync } from "@/features/auth/ui/account-sync";
+
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -34,6 +36,7 @@ type QueryProviderProps = {
 export function QueryProvider({ children }: QueryProviderProps) {
   return (
     <QueryClientProvider client={getQueryClient()}>
+      <AccountSync />
       {children}
       <ReactQueryDevtools />
     </QueryClientProvider>

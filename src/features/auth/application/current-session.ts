@@ -22,6 +22,7 @@ export async function readCurrentSession(requestHeaders: Headers) {
   return toPublicSession({
     id: session.user.id,
     name: session.user.name,
+    image: session.user.image,
     rankingParticipation: session.user.rankingParticipation,
     publicAchievementVisibility: session.user.publicAchievementVisibility,
   });
