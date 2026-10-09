@@ -16,6 +16,14 @@ const authErrors = defineApiErrors({
     status: 400,
     message: "The request is invalid.",
   },
+  invalid_display_name: {
+    status: 400,
+    message: "Display name must be 1–80 characters.",
+  },
+  forbidden: {
+    status: 403,
+    message: "You cannot access this account.",
+  },
   redirect_rejected: {
     status: 400,
     message: "Redirect must stay on this application.",

@@ -21,3 +21,13 @@ export function resolveDisplayName(
 
   return trimmed.slice(0, displayNameMaxLength);
 }
+
+export function normalizeDisplayNameUpdate(value: string): string | null {
+  const trimmed = value.trim();
+
+  if (trimmed.length < 1 || trimmed.length > displayNameMaxLength) {
+    return null;
+  }
+
+  return trimmed;
+}
