@@ -32,6 +32,15 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: {
+          alias: {
+            "@": path.join(dirname, "src"),
+            "server-only": path.join(
+              dirname,
+              "node_modules/server-only/empty.js",
+            ),
+          },
+        },
         test: {
           name: "db",
           environment: "node",

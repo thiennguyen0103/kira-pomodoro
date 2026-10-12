@@ -1,6 +1,7 @@
 export type ApiErrorBody<Code extends string = string> = {
   code: Code;
   message: string;
+  fields?: Record<string, string>;
 };
 
 export type ApiSuccess<Data> = {

@@ -9,18 +9,19 @@ datasource db {
 }
 
 model User {
-  id                          String    @id
+  id                          String           @id
   name                        String
   email                       String
-  emailVerified               Boolean   @default(false)
+  emailVerified               Boolean          @default(false)
   image                       String?
-  createdAt                   DateTime  @default(now())
-  updatedAt                   DateTime  @updatedAt
-  rankingParticipation        Boolean   @default(false)
-  publicAchievementVisibility Boolean   @default(false)
+  createdAt                   DateTime         @default(now())
+  updatedAt                   DateTime         @updatedAt
+  rankingParticipation        Boolean          @default(false)
+  publicAchievementVisibility Boolean          @default(false)
   sessions                    Session[]
   accounts                    Account[]
   skills                      Skill[]
+  skillOperations             SkillOperation[]
 
   @@unique([email])
   @@map("user")
@@ -37,9 +38,25 @@ model Skill {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  operations SkillOperation[]
+
   @@unique([ownerId, normalizedName], map: "skill_active_owner_normalized_name_key", where: raw("\"archivedAt\" IS NULL"))
   @@index([ownerId])
   @@map("skill")
+}
+
+model SkillOperation {
+  ownerId     String
+  operationId String
+  skillId     String
+  payload     String
+  createdAt   DateTime @default(now())
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  skill       Skill    @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([ownerId, operationId])
+  @@index([skillId])
+  @@map("skill_operation")
 }
 
 model Session {
