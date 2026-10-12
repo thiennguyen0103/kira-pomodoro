@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/app/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/app/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -19,9 +20,26 @@ model User {
   publicAchievementVisibility Boolean   @default(false)
   sessions                    Session[]
   accounts                    Account[]
+  skills                      Skill[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Skill {
+  id             String    @id @default(uuid())
+  ownerId        String
+  owner          User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name           String
+  normalizedName String
+  goalHours      Int
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([ownerId, normalizedName], map: "skill_active_owner_normalized_name_key", where: raw("\"archivedAt\" IS NULL"))
+  @@index([ownerId])
+  @@map("skill")
 }
 
 model Session {

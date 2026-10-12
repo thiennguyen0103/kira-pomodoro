@@ -27,6 +27,16 @@ export default defineConfig({
           name: "unit",
           environment: "node",
           include: ["src/**/*.test.ts"],
+          exclude: ["src/**/*.integration.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "db",
+          environment: "node",
+          include: ["src/**/*.integration.test.ts"],
+          fileParallelism: false,
         },
       },
       {
